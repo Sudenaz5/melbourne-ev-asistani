@@ -4,51 +4,49 @@ import threading
 import os
 import sys
 
-# Klasör yolları
+# Klasör yollarını sisteme tanıt
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
-# FastAPI uygulamasını oluştur
+# FastAPI ve Middleware kurulumu
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-# AI servisini en başta, Streamlit context'ine girmeden yükle
+# AI servisini thread dışında, en başta yükle
 try:
     from ai import ai_service
 except Exception as e:
-    print(f"Başlangıç hatası: {e}")
+    print(f"AI Import Hatası: {e}")
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @app.post("/predict")
-async def tahmin(veri: dict):
+async def predict_api(veri: dict):
     return {"tahmini_fiyat": ai_service.tahmin_uret(veri)}
 
-# Arayüz dosyalarını bağla
+# Frontend klasörünü /site yoluna bağla
 frontend_path = os.path.join(BASE_DIR, "frontend")
 if os.path.exists(frontend_path):
     app.mount("/site", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
-# API'yi Streamlit'ten bağımsız bir thread'de başlat
-if not hasattr(st, 'api_started'):
-    def run():
-        uvicorn.run(app, host="0.0.0.0", port=8000)
-    threading.Thread(target=run, daemon=True).start()
-    st.api_started = True
+# FastAPI sunucusunu başlat
+def run_fastapi():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
-# STREAMLIT ARAYÜZÜ
-st.set_page_config(page_title="Melbourne Ev Asistanı")
+if "api_started" not in st.session_state:
+    threading.Thread(target=run_fastapi, daemon=True).start()
+    st.session_state["api_started"] = True
+
+# --- STREAMLIT GÖRSEL EKRANI ---
+st.set_page_config(page_title="Melbourne Emlak Sistemi", layout="wide")
 st.title("🏠 Melbourne Ev Karar Asistanı")
-st.success("✅ Backend sunucusu port 8000 üzerinde aktif!")
 
-st.markdown(f"""
-### 🚀 Uygulama Yayında!
-Modeliniz başarıyla yüklendi. Hazırladığınız özel arayüze erişmek için:
-1. Streamlit URL'nizin sonuna `/site/` ekleyerek deneyin.
-2. Ya da aşağıdaki butona basarak tahmin üretin.
-""")
+if ai_service.model:
+    st.success("✅ Model ve Backend Başarıyla Yüklendi!")
+    st.balloons()
+else:
+    st.error("⚠️ Model henüz yüklenemedi. Logları kontrol edin.")
 
-if st.button("Tahmin Test Et"):
-    st.write("Model Durumu:", "Yüklendi" if ai_service.model else "Hata!")
+st.info("Kendi arayüzünüze erişmek için URL sonuna '/site/' ekleyin.")
