@@ -56,3 +56,17 @@ async def get_market_data():
 frontend_path = os.path.join(BASE_DIR, "frontend")
 if os.path.exists(frontend_path):
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+# main.py dosyanın en altına ekle
+import uvicorn
+import threading
+
+def run_api():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# API'yi ayrı bir kanalda başlat
+threading.Thread(target=run_api, daemon=True).start()
+
+# Streamlit'in hata vermemesi için basit bir başlık ekle
+import streamlit as st
+st.title("Backend Sunucusu Aktif")
+st.write("Frontend dosyanız üzerinden API'ye erişebilirsiniz.")
