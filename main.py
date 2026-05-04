@@ -5,10 +5,15 @@ from pydantic import BaseModel
 import sys
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Mevcut dosyanın olduğu klasörü (root) al
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
-from ai import ai_service
+# Şimdi ai klasörünün içindeki ai_service'i çağırabiliriz
+try:
+    from ai import ai_service
+except ImportError as e:
+    print(f"Import Hatası: {e}")
 
 app = FastAPI(title="Emlak Projesi API")
 
