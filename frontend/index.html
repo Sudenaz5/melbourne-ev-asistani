@@ -4,61 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Melbourne Ev Karar Asistanı</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    
-    <!-- React & Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         :root {
-          --color-bg: #faf8f5;
-          --color-card: #fdfcfb;
-          --color-ecru: #f5eedc;
-          --color-tan: #d7ccc8;
-          --color-brown-light: #8d6e63;
-          --color-brown: #5d4037;
-          --color-brown-dark: #3e2723;
-          --color-accent: #a1887f;
-          --shadow-sm: 0 2px 4px rgba(62, 39, 35, 0.05);
-          --shadow-md: 0 4px 12px rgba(62, 39, 35, 0.08);
-          --shadow-lg: 0 8px 24px rgba(62, 39, 35, 0.12);
-          --radius-md: 12px;
-          --radius-lg: 20px;
+          --color-bg: #faf8f5; --color-card: #fdfcfb; --color-ecru: #f5eedc;
+          --color-tan: #d7ccc8; --color-brown-light: #8d6e63; --color-brown: #5d4037;
+          --color-brown-dark: #3e2723; --shadow-md: 0 4px 12px rgba(62, 39, 35, 0.08);
+          --radius-md: 12px; --radius-lg: 20px;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: var(--color-brown-dark); line-height: 1.6; }
-        h1, h2, h3, h4 { font-family: 'Playfair Display', serif; color: var(--color-brown-dark); font-weight: 600; }
         .container { max-width: 1000px; margin: 0 auto; padding: 2rem; }
-        .header { background: linear-gradient(135deg, var(--color-brown-dark) 0%, var(--color-brown) 100%); padding: 3rem; border-radius: var(--radius-lg); margin-bottom: 2rem; color: var(--color-ecru); box-shadow: var(--shadow-lg); }
-        .header h1 { color: var(--color-bg); font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .panel { background: var(--color-card); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); margin-bottom: 2rem; border: 1px solid var(--color-ecru); }
-        .panel-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 1.3rem; }
-        .step-num { background: var(--color-brown-light); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--color-brown); margin-bottom: 0.5rem; text-transform: uppercase; }
-        .form-input { width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--color-tan); }
-        .btn-primary { background-color: var(--color-brown); color: white; border: none; padding: 1rem 2rem; font-size: 1.1rem; border-radius: var(--radius-md); cursor: pointer; width: 100%; }
-        .btn-primary:hover { background-color: var(--color-brown-dark); transform: translateY(-2px); }
-        .loader { border: 4px solid var(--color-ecru); border-top: 4px solid var(--color-brown); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .header { background: linear-gradient(135deg, var(--color-brown-dark) 0%, var(--color-brown) 100%); padding: 3rem; border-radius: var(--radius-lg); margin-bottom: 2rem; color: var(--color-ecru); text-align: center; }
+        .header h1 { font-family: 'Playfair Display', serif; color: var(--color-bg); font-size: 2.5rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .panel { background: var(--color-card); border-radius: var(--radius-lg); padding: 2rem; shadow: var(--shadow-md); border: 1px solid var(--color-ecru); }
+        .step-num { background: var(--color-brown-light); color: white; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-weight: bold; }
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--color-brown); margin-bottom: 0.5rem; }
+        .form-input { width: 100%; padding: 0.7rem; border-radius: var(--radius-md); border: 1px solid var(--color-tan); }
+        .btn-primary { background: var(--color-brown); color: white; border: none; padding: 1rem; border-radius: var(--radius-md); cursor: pointer; width: 100%; font-weight: 600; transition: 0.3s; }
+        .btn-primary:hover { background: var(--color-brown-dark); }
+        .loader { border: 4px solid var(--color-ecru); border-top: 4px solid var(--color-brown); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
-        const { useState, useEffect } = React;
-
+        const { useState } = React;
         function App() {
             const [oda, setOda] = useState(3);
             const [alan, setAlan] = useState(120);
@@ -69,30 +49,15 @@
 
             const hesapla = async () => {
                 setLoading(true);
-                const veri = {
-                    oda_sayisi: oda,
-                    metrekare: alan,
-                    bolge_id: mesafe,
-                    bina_yasi: yas,
-                    banyo_sayisi: 1,
-                    garaj_sayisi: 1,
-                    ev_tipi: 0,
-                    bolge_kodu: 2
-                };
-
                 try {
-                    // ÖNEMLİ: Streamlit Cloud için sadece /predict kullanıyoruz
                     const response = await fetch('/predict', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(veri)
+                        body: JSON.stringify({ oda_sayisi: oda, metrekare: alan, bolge_id: mesafe, bina_yasi: yas, banyo_sayisi: 1, garaj_sayisi: 1, ev_tipi: 0, bolge_kodu: 2 })
                     });
                     const data = await response.json();
                     setFiyat(data.tahmini_fiyat);
-                } catch (error) {
-                    console.error(error);
-                    setFiyat("Hata");
-                }
+                } catch (e) { setFiyat("Hata"); }
                 setLoading(false);
             };
 
@@ -100,75 +65,43 @@
                 <div className="container">
                     <header className="header">
                         <h1>Melbourne Ev Karar Asistanı</h1>
-                        <p>Makine öğrenmesi destekli, premium ev fiyat tahmin asistanı.</p>
+                        <p>Premium Yapay Zeka Tahmin Sistemi</p>
                     </header>
-
                     <main className="grid-2">
                         <section className="panel">
-                            <div className="panel-title">
-                                <div className="step-num">1</div>
-                                <h3>Ev Özellikleri</h3>
-                            </div>
-                            
+                            <h3><span className="step-num">1</span> Özellikler</h3>
                             <div className="form-group">
-                                <label>Oda Sayısı: <span style={{color: 'var(--color-brown-light)'}}>{oda}</span></label>
-                                <input type="range" min="1" max="10" style={{width: '100%'}} value={oda} onChange={e => setOda(Number(e.target.value))} />
+                                <label>Oda: {oda}</label>
+                                <input type="range" min="1" max="10" style={{width:'100%'}} value={oda} onChange={e=>setOda(Number(e.target.value))} />
                             </div>
-
                             <div className="form-group">
                                 <label>Metrekare (m²):</label>
-                                <input type="number" className="form-input" value={alan} onChange={e => setAlan(Number(e.target.value))} />
+                                <input type="number" className="form-input" value={alan} onChange={e=>setAlan(Number(e.target.value))} />
                             </div>
-
                             <div className="form-group">
-                                <label>Merkeze Uzaklık (km):</label>
-                                <input type="number" className="form-input" value={mesafe} onChange={e => setMesafe(Number(e.target.value))} />
+                                <label>Uzaklık (km):</label>
+                                <input type="number" className="form-input" value={mesafe} onChange={e=>setMesafe(Number(e.target.value))} />
                             </div>
-
                             <div className="form-group">
-                                <label>Bina Yaşı (Yıl):</label>
-                                <input type="number" className="form-input" value={yas} onChange={e => setYas(Number(e.target.value))} />
+                                <label>Bina Yaşı:</label>
+                                <input type="number" className="form-input" value={yas} onChange={e=>setYas(Number(e.target.value))} />
                             </div>
-
-                            <button className="btn-primary" onClick={hesapla} disabled={loading}>
-                                {loading ? "Hesaplanıyor..." : "Fiyatı Tahmin Et"}
-                            </button>
+                            <button className="btn-primary" onClick={hesapla}>{loading ? "..." : "Tahmin Et"}</button>
                         </section>
-
-                        <section className="panel">
-                            <div className="panel-title">
-                                <div className="step-num">2</div>
-                                <h3>Tahmin Sonucu</h3>
-                            </div>
-                            
-                            {loading && <div className="loader"></div>}
-                            
-                            {!loading && fiyat !== null && (
-                                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
-                                    <p style={{ fontSize: '1.2rem', color: 'var(--color-brown-light)', marginBottom: '1rem' }}>Modelimizin tahmini:</p>
-                                    {typeof fiyat === 'number' ? (
-                                        <h2 style={{ fontSize: '3rem', color: 'var(--color-brown-dark)' }}>
-                                            {fiyat.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} <span>$</span>
-                                        </h2>
-                                    ) : (
-                                        <p style={{ color: 'red' }}>Hata oluştu.</p>
-                                    )}
+                        <section className="panel" style={{textAlign:'center'}}>
+                            <h3><span className="step-num">2</span> Sonuç</h3>
+                            {loading ? <div className="loader"></div> : fiyat !== null ? (
+                                <div>
+                                    <p style={{color:'#8d6e63'}}>Tahmini Değer:</p>
+                                    <h2 style={{fontSize:'2.5rem'}}>{typeof fiyat === 'number' ? fiyat.toLocaleString() + ' $' : fiyat}</h2>
                                 </div>
-                            )}
-                            
-                            {!loading && fiyat === null && (
-                                <div style={{ textAlign: 'center', padding: '3rem 0', color: var(--color-tan) }}>
-                                    <p>Tahmin için yandaki özellikleri doldurup butona tıklayın.</p>
-                                </div>
-                            )}
+                            ) : <p style={{marginTop:'20px', color:'#d7ccc8'}}>Verileri girip butona basın.</p>}
                         </section>
                     </main>
                 </div>
             );
         }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
