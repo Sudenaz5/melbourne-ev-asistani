@@ -2,42 +2,26 @@ import os
 import zipfile
 import joblib
 import pandas as pd
-import numpy as np
 
-# Mevcut dosyanın klasörü (ai/)
+# Mevcut dosyanın klasörü
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Projenin ana kök dizini (/mount/src/melbourne-ev-asistani)
-BASE_DIR = os.path.dirname(CURRENT_DIR)
-
-# Zip dosyasını hem ana dizinde hem de ai/ içinde ara
-ZIP_PATH = os.path.join(BASE_DIR, "final_model.zip")
-if not os.path.exists(ZIP_PATH):
-    ZIP_PATH = os.path.join(CURRENT_DIR, "final_model.zip")
+# Zip dosyasını hem ai içinde hem ana dizinde ara
+ZIP_LOCATIONS = [
+    os.path.join(CURRENT_DIR, "final_model.zip"),
+    os.path.join(os.path.dirname(CURRENT_DIR), "final_model.zip")
+]
 
 MODEL_PATH = os.path.join(CURRENT_DIR, "final_model.pkl")
 
-# ZIP çıkarma işlemi
-if not os.path.exists(MODEL_PATH):
-    if os.path.exists(ZIP_PATH):
-        try:
-            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-                zip_ref.extractall(CURRENT_DIR)
-            print("✅ Model zip'ten başarıyla çıkarıldı.")
-        except Exception as e:
-            print(f"❌ Zip çıkarma hatası: {e}")
-    else:
-        print(f"❌ Hata: {ZIP_PATH} adresinde zip bulunamadı!")
+# ZIP dosyasını bul ve çıkar
+model_zip = next((loc for loc in ZIP_LOCATIONS if os.path.exists(loc)), None)
+
+if not os.path.exists(MODEL_PATH) and model_zip:
+    with zipfile.ZipFile(model_zip, 'r') as z:
+        z.extractall(CURRENT_DIR)
 
 # Modeli yükle
-try:
-    if os.path.exists(MODEL_PATH):
-        model = joblib.load(MODEL_PATH)
-        print("✅ Model başarıyla yüklendi.")
-    else:
-        model = None
-except Exception as e:
-    print(f"❌ Model yükleme hatası: {e}")
-    model = None
+model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 
 # Veri setini yükle
 DATA_PATH = os.path.join(CURRENT_DIR, "melb_data.csv")
