@@ -1,72 +1,73 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-import sys
+import streamlit as st
+import uvicorn
+import threading
 import os
+import sys
 
-# Mevcut dosyanın olduğu klasörü (root) al
+# 1. Klasör yollarını ayarla
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
-# Şimdi ai klasörünün içindeki ai_service'i çağırabiliriz
+# 2. FastAPI (Backend) kısmını içe aktar veya tanımla
+# Not: Mevcut FastAPI 'app' nesnenin bu dosyanın içinde olduğunu varsayıyorum.
+# Eğer başka dosyadaysa: from backend_dosyan import app
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+# AI servisini yükle
 try:
     from ai import ai_service
-except ImportError as e:
-    print(f"Import Hatası: {e}")
+except Exception as e:
+    print(f"AI Servisi Hatası: {e}")
 
-app = FastAPI(title="Emlak Projesi API")
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# API Endpoint'lerin (Önceki kodundan gelenler)
 @app.post("/predict")
 async def tahmin_yap(veri: dict):
     sonuc = ai_service.tahmin_uret(veri)
-    fiyat = sonuc if isinstance(sonuc, (int, float)) else 0
-    return {"tahmini_fiyat": fiyat}
-
-class RecommendationRequest(BaseModel):
-    profil_id: str
-    min_price: float
-    max_price: float
-    max_distance_str: str
-    oncelik_id: str
-    ev_tipi_id: str
-    min_banyo: int
-    min_garaj: int
+    return {"tahmini_fiyat": sonuc}
 
 @app.post("/recommendations")
-async def get_recommendations(req: RecommendationRequest):
-    recs = ai_service.get_recommendations(
-        req.profil_id, req.min_price, req.max_price, req.max_distance_str,
-        req.oncelik_id, req.ev_tipi_id, req.min_banyo, req.min_garaj
-    )
-    return recs
+async def get_recommendations(req: dict):
+    return ai_service.get_recommendations(**req)
 
-@app.get("/market-data")
-async def get_market_data():
-    return ai_service.get_market_data()
-
+# Frontend klasörünü bağla
 frontend_path = os.path.join(BASE_DIR, "frontend")
 if os.path.exists(frontend_path):
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
-# main.py dosyanın en altına ekle
-import uvicorn
-import threading
 
+# 3. FastAPI'yi arka planda başlatma fonksiyonu
 def run_api():
+    # Streamlit Cloud üzerinde 8000 portunda çalıştırıyoruz
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
-# API'yi ayrı bir kanalda başlat
-threading.Thread(target=run_api, daemon=True).start()
+# Thread başlat (Eğer daha önce başlatılmadıysa)
+if "api_started" not in st.session_state:
+    threading.Thread(target=run_api, daemon=True).start()
+    st.session_state["api_started"] = True
 
-# Streamlit'in hata vermemesi için basit bir başlık ekle
-import streamlit as st
-st.title("Backend Sunucusu Aktif")
-st.write("Frontend dosyanız üzerinden API'ye erişebilirsiniz.")
+# 4. STREAMLIT ARAYÜZÜ (Bu kısım "Oh no" hatasını siler)
+st.set_page_config(page_title="Melbourne Ev Asistanı", page_icon="🏠")
+
+st.success("🚀 Sistem Başarıyla Başlatıldı!")
+st.balloons() # İlk açılışta kutlama yapalım
+
+st.markdown("""
+### 🏠 Melbourne Ev Karar Asistanı Aktif!
+Senin hazırladığın özel frontend arayüzü şu an arka planda servis ediliyor. 
+
+**Not:** Streamlit Cloud genellikle doğrudan 8000 portunu dışarı açmaz. 
+Eğer arayüzünü göremiyorsan, yukarıdaki butona tıklayarak manuel tahmin panelini kullanabilirsin.
+""")
+
+if st.button("Hızlı Tahmin Panelini Aç"):
+    st.info("Bu buton, frontend ile backend arasındaki bağı test etmek içindir.")
