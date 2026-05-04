@@ -1,31 +1,46 @@
 import os
 import zipfile
 import joblib
+import pandas as pd
+import numpy as np
 
 # Mevcut dosyanın klasörü (ai/)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Projenin ana klasörü
+# Projenin ana kök dizini (/mount/src/melbourne-ev-asistani)
 BASE_DIR = os.path.dirname(CURRENT_DIR)
 
-# Zip dosyası ana dizinde mi yoksa ai klasöründe mi? İkisini de kontrol et.
+# Zip dosyasını hem ana dizinde hem de ai/ içinde ara
 ZIP_PATH = os.path.join(BASE_DIR, "final_model.zip")
 if not os.path.exists(ZIP_PATH):
     ZIP_PATH = os.path.join(CURRENT_DIR, "final_model.zip")
 
 MODEL_PATH = os.path.join(CURRENT_DIR, "final_model.pkl")
 
-if not os.path.exists(MODEL_PATH) and os.path.exists(ZIP_PATH):
-    with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-        zip_ref.extractall(CURRENT_DIR)
+# ZIP çıkarma işlemi
+if not os.path.exists(MODEL_PATH):
+    if os.path.exists(ZIP_PATH):
+        try:
+            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
+                zip_ref.extractall(CURRENT_DIR)
+            print("✅ Model zip'ten başarıyla çıkarıldı.")
+        except Exception as e:
+            print(f"❌ Zip çıkarma hatası: {e}")
+    else:
+        print(f"❌ Hata: {ZIP_PATH} adresinde zip bulunamadı!")
 
-model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
-
-# Modeli yükle[cite: 1]
+# Modeli yükle
 try:
-    model = joblib.load(MODEL_PATH)
+    if os.path.exists(MODEL_PATH):
+        model = joblib.load(MODEL_PATH)
+        print("✅ Model başarıyla yüklendi.")
+    else:
+        model = None
 except Exception as e:
-    print(f"Model yükleme hatası: {e}")
+    print(f"❌ Model yükleme hatası: {e}")
     model = None
+
+# Veri setini yükle
+DATA_PATH = os.path.join(CURRENT_DIR, "melb_data.csv")
 
 try:
     data = pd.read_csv(DATA_PATH)
