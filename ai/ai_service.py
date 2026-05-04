@@ -3,24 +3,24 @@ import zipfile
 import joblib
 import pandas as pd
 
-# Mevcut dosyanın klasörü
+# ai klasörünün tam yolu
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Zip dosyasını hem ai içinde hem ana dizinde ara
-ZIP_LOCATIONS = [
-    os.path.join(CURRENT_DIR, "final_model.zip"),
-    os.path.join(os.path.dirname(CURRENT_DIR), "final_model.zip")
-]
+# Bir üst klasör (ana dizin)
+ROOT_DIR = os.path.dirname(CURRENT_DIR)
+
+# Zip dosyasını önce ana dizinde sonra ai klasöründe ara
+ZIP_PATH = os.path.join(ROOT_DIR, "final_model.zip")
+if not os.path.exists(ZIP_PATH):
+    ZIP_PATH = os.path.join(CURRENT_DIR, "final_model.zip")
 
 MODEL_PATH = os.path.join(CURRENT_DIR, "final_model.pkl")
 
-# ZIP dosyasını bul ve çıkar
-model_zip = next((loc for loc in ZIP_LOCATIONS if os.path.exists(loc)), None)
-
-if not os.path.exists(MODEL_PATH) and model_zip:
-    with zipfile.ZipFile(model_zip, 'r') as z:
+# ZIP çıkarma
+if not os.path.exists(MODEL_PATH) and os.path.exists(ZIP_PATH):
+    with zipfile.ZipFile(ZIP_PATH, 'r') as z:
         z.extractall(CURRENT_DIR)
 
-# Modeli yükle
+# Model yükleme
 model = joblib.load(MODEL_PATH) if os.path.exists(MODEL_PATH) else None
 
 # Veri setini yükle
