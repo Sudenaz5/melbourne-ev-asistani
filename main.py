@@ -1,52 +1,40 @@
 import streamlit as st
-import uvicorn
-import threading
 import os
 import sys
 
-# Klasör yollarını sisteme tanıt
+# Klasör yollarını ayarla
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
-# FastAPI ve Middleware kurulumu
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-
-# AI servisini thread dışında, en başta yükle
+# AI Servisini Yükle
 try:
     from ai import ai_service
+    # Model yüklenmiş mi kontrol et (ai_service içinde joblib.load var)
+    model_durumu = "Yüklendi ✅" if ai_service.model is not None else "Yüklenemedi ❌"
 except Exception as e:
-    print(f"AI Import Hatası: {e}")
+    model_durumu = f"Hata: {e}"
 
-app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# STREAMLIT ARAYÜZÜ
+st.set_page_config(page_title="Melbourne Ev Asistanı", layout="wide")
 
-@app.post("/predict")
-async def predict_api(veri: dict):
-    return {"tahmini_fiyat": ai_service.tahmin_uret(veri)}
-
-# Frontend klasörünü /site yoluna bağla
-frontend_path = os.path.join(BASE_DIR, "frontend")
-if os.path.exists(frontend_path):
-    app.mount("/site", StaticFiles(directory=frontend_path, html=True), name="frontend")
-
-# FastAPI sunucusunu başlat
-def run_fastapi():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-if "api_started" not in st.session_state:
-    threading.Thread(target=run_fastapi, daemon=True).start()
-    st.session_state["api_started"] = True
-
-# --- STREAMLIT GÖRSEL EKRANI ---
-st.set_page_config(page_title="Melbourne Emlak Sistemi", layout="wide")
 st.title("🏠 Melbourne Ev Karar Asistanı")
+st.write(f"**Model Durumu:** {model_durumu}")
 
-if ai_service.model:
-    st.success("✅ Model ve Backend Başarıyla Yüklendi!")
-    st.balloons()
+if ai_service.model is None:
+    st.error("Model dosyası (.pkl) bulunamadı. Lütfen 'final_model.zip' dosyasının doğru yerde olduğunu kontrol edin.")
+    st.info(f"Aranan yerler: {BASE_DIR} veya {os.path.join(BASE_DIR, 'ai')}")
 else:
-    st.error("⚠️ Model henüz yüklenemedi. Logları kontrol edin.")
+    st.success("Sistem hazır! Tahmin yapmaya başlayabilirsiniz.")
+    st.balloons()
 
-st.info("Kendi arayüzünüze erişmek için URL sonuna '/site/' ekleyin.")
+# Yan panelde basit bir test arayüzü
+with st.sidebar:
+    st.header("Hızlı Tahmin")
+    oda = st.slider("Oda Sayısı", 1, 5, 3)
+    bina_yasi = st.number_input("Bina Yaşı", 0, 100, 10)
+    
+    if st.button("Fiyat Tahmin Et"):
+        # Doğrudan ai_service fonksiyonunu kullanıyoruz, API'ye gerek yok!
+        test_veri = {'oda_sayisi': oda, 'bina_yasi': bina_yasi}
+        sonuc = ai_service.tahmin_uret(test_veri)
+        st.metric("Tahmini Fiyat", f"{sonuc:,.0f} AUD")
