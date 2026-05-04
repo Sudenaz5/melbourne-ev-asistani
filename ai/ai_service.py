@@ -4,17 +4,31 @@ import joblib
 import os
 import zipfile
 
+# Mevcut dosyanın konumunu al (ai klasörü)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(BASE_DIR, "melb_data.csv")
-MODEL_PATH = os.path.join(BASE_DIR, "final_model.pkl")
-ZIP_PATH = os.path.join(BASE_DIR, "final_model.zip")
 
+# Model yollarını ayarla
+ZIP_PATH = os.path.join(BASE_DIR, 'final_model.zip') # Zip ai/ klasöründe
+MODEL_PATH = os.path.join(BASE_DIR, 'final_model.pkl') # Pkl buraya çıkarılacak
+
+# Model dosyası yoksa zip'ten çıkar
+if not os.path.exists(MODEL_PATH):
+    if os.path.exists(ZIP_PATH):
+        try:
+            with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
+                zip_ref.extractall(BASE_DIR)
+            print("Model başarıyla zip'ten çıkarıldı.")
+        except Exception as e:
+            print(f"Zip çıkarma hatası: {e}")
+    else:
+        print("Hata: final_model.zip bulunamadı!")
+
+# Modeli yükle[cite: 1]
 try:
-    if not os.path.exists(MODEL_PATH) and os.path.exists(ZIP_PATH):
-        with zipfile.ZipFile(ZIP_PATH, 'r') as zip_ref:
-            zip_ref.extractall(BASE_DIR)
     model = joblib.load(MODEL_PATH)
 except Exception as e:
+    print(f"Model yükleme hatası: {e}")
     model = None
 
 try:
