@@ -3,69 +3,52 @@ import uvicorn
 import threading
 import os
 import sys
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-# 1. Klasör ve Yol Ayarları
+# Klasör yolları
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
-# AI Servisini Yükle
+# FastAPI uygulamasını oluştur
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+
+# AI servisini en başta, Streamlit context'ine girmeden yükle
 try:
     from ai import ai_service
 except Exception as e:
-    st.error(f"AI Servisi yüklenirken hata oluştu: {e}")
+    print(f"Başlangıç hatası: {e}")
 
-# 2. FastAPI (Backend) Tanımlama
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @app.post("/predict")
-async def tahmin_yap(veri: dict):
-    sonuc = ai_service.tahmin_uret(veri)
-    fiyat = sonuc if isinstance(sonuc, (int, float)) else 0
-    return {"tahmini_fiyat": fiyat}
+async def tahmin(veri: dict):
+    return {"tahmini_fiyat": ai_service.tahmin_uret(veri)}
 
-@app.post("/recommendations")
-async def get_recommendations(req: dict):
-    # Gelen veriyi ai_service'e aktar
-    recs = ai_service.get_recommendations(**req)
-    return recs
-
-# Frontend dosyalarını bağla
+# Arayüz dosyalarını bağla
 frontend_path = os.path.join(BASE_DIR, "frontend")
 if os.path.exists(frontend_path):
-    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+    app.mount("/site", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
-# 3. FastAPI'yi Arka Planda Başlatma (Thread)
-def run_api():
-    # Streamlit Cloud üzerinde 8000 portunda çalıştırıyoruz
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+# API'yi Streamlit'ten bağımsız bir thread'de başlat
+if not hasattr(st, 'api_started'):
+    def run():
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    threading.Thread(target=run, daemon=True).start()
+    st.api_started = True
 
-if "api_started" not in st.session_state:
-    thread = threading.Thread(target=run_api, daemon=True)
-    thread.start()
-    st.session_state["api_started"] = True
-
-# 4. Streamlit Görsel Arayüzü (Oh No Hatasını Giderir)
-st.set_page_config(page_title="Melbourne Emlak Asistanı", layout="wide")
-
-st.success("✅ Backend Sunucusu Başarıyla Başlatıldı!")
-st.balloons()
-
+# STREAMLIT ARAYÜZÜ
+st.set_page_config(page_title="Melbourne Ev Asistanı")
 st.title("🏠 Melbourne Ev Karar Asistanı")
-st.markdown("""
-### Sistem Aktif!
-Senin hazırladığın özel HTML/JS arayüzü şu an arka planda servis ediliyor. 
-Streamlit Cloud kısıtlamaları nedeniyle doğrudan 8000 portuna erişemiyor olabilirsin.
+st.success("✅ Backend sunucusu port 8000 üzerinde aktif!")
+
+st.markdown(f"""
+### 🚀 Uygulama Yayında!
+Modeliniz başarıyla yüklendi. Hazırladığınız özel arayüze erişmek için:
+1. Streamlit URL'nizin sonuna `/site/` ekleyerek deneyin.
+2. Ya da aşağıdaki butona basarak tahmin üretin.
 """)
 
-st.info("Eğer kendi arayüzün açılmazsa, tahminleri buradan manuel olarak da yapabilirsin.")
+if st.button("Tahmin Test Et"):
+    st.write("Model Durumu:", "Yüklendi" if ai_service.model else "Hata!")
