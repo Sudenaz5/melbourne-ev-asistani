@@ -1,0 +1,35 @@
+:root {
+    --ekru: #F5F5DC;
+    --kahve-orta: #6F4E37;
+    --kahve-koyu: #3D2B1F;
+}
+
+body {
+    background-color: var(--ekru);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--kahve-koyu);
+    display: flex;
+    justify-content: center;
+    padding: 50px;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(61, 43, 31, 0.2);
+    border-top: 5px solid var(--kahve-koyu);
+}
+
+button {
+    background-color: var(--kahve-orta);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: var(--kahve-koyu);
+}
